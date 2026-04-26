@@ -1,0 +1,21 @@
+{
+  "kind": "collectionType",
+  "collectionName": "transportistas",
+  "info": {
+    "singularName": "transportista",
+    "pluralName": "transportistas",
+    "displayName": "Transportista"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "IdTransportista": {
+      "type": "string"
+    },
+    "Descripcion": {
+      "type": "string"
+    }
+  }
+}

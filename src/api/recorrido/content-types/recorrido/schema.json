@@ -1,0 +1,84 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recorridos",
+  "info": {
+    "singularName": "recorrido",
+    "pluralName": "recorridos",
+    "displayName": "Administrador Recorridos",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "codigo": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "descripcion": {
+      "type": "string",
+      "required": true,
+      "maxLength": 50
+    },
+    "transportista": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::transportista.transportista"
+    },
+    "puntoExpedicion": {
+      "type": "enumeration",
+      "enum": [
+        "NO APLICA",
+        "DEPOSITO LA NACION",
+        "PLANTA IMPRESORA"
+      ],
+      "default": "NO APLICA",
+      "required": true
+    },
+    "activa": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
+    "rutaImpreso": {
+      "type": "string",
+      "maxLength": 10
+    },
+    "lunes": {
+      "type": "boolean",
+      "default": false
+    },
+    "martes": {
+      "type": "boolean",
+      "default": false
+    },
+    "miercoles": {
+      "type": "boolean",
+      "default": false
+    },
+    "jueves": {
+      "type": "boolean",
+      "default": false
+    },
+    "viernes": {
+      "type": "boolean",
+      "default": false
+    },
+    "sabado": {
+      "type": "boolean",
+      "default": false
+    },
+    "domingo": {
+      "type": "boolean",
+      "default": false
+    },
+    "paradas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::parada.parada",
+      "mappedBy": "recorrido"
+    }
+  }
+}

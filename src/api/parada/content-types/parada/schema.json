@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "paradas",
+  "info": {
+    "singularName": "parada",
+    "pluralName": "paradas",
+    "displayName": "paradaXrecorrido",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "ordenVisita": {
+      "type": "integer",
+      "required": true
+    },
+    "destino_agente": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::agente.agente"
+    },
+    "destino_recorrido": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::recorrido.recorrido"
+    },
+    "recorrido": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::recorrido.recorrido",
+      "inversedBy": "paradas"
+    }
+  }
+}

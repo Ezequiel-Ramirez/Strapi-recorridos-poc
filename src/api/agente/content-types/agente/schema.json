@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "agentes",
+  "info": {
+    "singularName": "agente",
+    "pluralName": "agentes",
+    "displayName": "Agente",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "IdAgente": {
+      "type": "string",
+      "required": true
+    },
+    "RazonSocial": {
+      "type": "string",
+      "required": true
+    },
+    "Email": {
+      "type": "string"
+    },
+    "Activo": {
+      "type": "boolean",
+      "required": true
+    },
+    "IdAgenteSap": {
+      "type": "string",
+      "required": true
+    },
+    "Domicilio": {
+      "type": "string",
+      "required": true
+    },
+    "Ciudad": {
+      "type": "string",
+      "required": true
+    },
+    "Provincia": {
+      "type": "string",
+      "required": true
+    },
+    "IdAgentePadre": {
+      "type": "string"
+    },
+    "IdGrupoCliente": {
+      "type": "string"
+    },
+    "GrupoCuenta": {
+      "type": "string"
+    },
+    "HabilitadoRepo": {
+      "type": "boolean"
+    },
+    "Cuit": {
+      "type": "string"
+    },
+    "AgenteRediaf": {
+      "type": "boolean"
+    },
+    "AgenteExcluido": {
+      "type": "boolean"
+    }
+  }
+}

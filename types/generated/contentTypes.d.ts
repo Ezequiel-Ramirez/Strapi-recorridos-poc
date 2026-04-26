@@ -467,6 +467,177 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAgenteAgente extends Struct.CollectionTypeSchema {
+  collectionName: 'agentes';
+  info: {
+    description: '';
+    displayName: 'Agente';
+    pluralName: 'agentes';
+    singularName: 'agente';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Activo: Schema.Attribute.Boolean & Schema.Attribute.Required;
+    AgenteExcluido: Schema.Attribute.Boolean;
+    AgenteRediaf: Schema.Attribute.Boolean;
+    Ciudad: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Cuit: Schema.Attribute.String;
+    Domicilio: Schema.Attribute.String & Schema.Attribute.Required;
+    Email: Schema.Attribute.String;
+    GrupoCuenta: Schema.Attribute.String;
+    HabilitadoRepo: Schema.Attribute.Boolean;
+    IdAgente: Schema.Attribute.String & Schema.Attribute.Required;
+    IdAgentePadre: Schema.Attribute.String;
+    IdAgenteSap: Schema.Attribute.String & Schema.Attribute.Required;
+    IdGrupoCliente: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::agente.agente'
+    > &
+      Schema.Attribute.Private;
+    Provincia: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    RazonSocial: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiParadaParada extends Struct.CollectionTypeSchema {
+  collectionName: 'paradas';
+  info: {
+    description: '';
+    displayName: 'paradaXrecorrido';
+    pluralName: 'paradas';
+    singularName: 'parada';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    destino_agente: Schema.Attribute.Relation<'oneToOne', 'api::agente.agente'>;
+    destino_recorrido: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::recorrido.recorrido'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::parada.parada'
+    > &
+      Schema.Attribute.Private;
+    ordenVisita: Schema.Attribute.Integer & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    recorrido: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::recorrido.recorrido'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRecorridoRecorrido extends Struct.CollectionTypeSchema {
+  collectionName: 'recorridos';
+  info: {
+    description: '';
+    displayName: 'Administrador Recorridos';
+    pluralName: 'recorridos';
+    singularName: 'recorrido';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activa: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    codigo: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
+    domingo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    jueves: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::recorrido.recorrido'
+    > &
+      Schema.Attribute.Private;
+    lunes: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    martes: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    miercoles: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    paradas: Schema.Attribute.Relation<'oneToMany', 'api::parada.parada'>;
+    publishedAt: Schema.Attribute.DateTime;
+    puntoExpedicion: Schema.Attribute.Enumeration<
+      ['NO APLICA', 'DEPOSITO LA NACION', 'PLANTA IMPRESORA']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'NO APLICA'>;
+    rutaImpreso: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 10;
+      }>;
+    sabado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    transportista: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::transportista.transportista'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    viernes: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+  };
+}
+
+export interface ApiTransportistaTransportista
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'transportistas';
+  info: {
+    displayName: 'Transportista';
+    pluralName: 'transportistas';
+    singularName: 'transportista';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Descripcion: Schema.Attribute.String;
+    IdTransportista: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transportista.transportista'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -979,6 +1150,10 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::agente.agente': ApiAgenteAgente;
+      'api::parada.parada': ApiParadaParada;
+      'api::recorrido.recorrido': ApiRecorridoRecorrido;
+      'api::transportista.transportista': ApiTransportistaTransportista;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
