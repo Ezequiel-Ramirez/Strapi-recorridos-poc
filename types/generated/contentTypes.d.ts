@@ -536,6 +536,7 @@ export interface ApiParadaParada extends Struct.CollectionTypeSchema {
       'api::parada.parada'
     > &
       Schema.Attribute.Private;
+    nombre: Schema.Attribute.String;
     ordenVisita: Schema.Attribute.Integer & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     recorrido: Schema.Attribute.Relation<

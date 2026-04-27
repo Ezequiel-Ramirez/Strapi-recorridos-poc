@@ -12,6 +12,9 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "nombre": {
+      "type": "string"
+    },
     "ordenVisita": {
       "type": "integer",
       "required": true
