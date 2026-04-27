@@ -9,9 +9,12 @@ import {
   Loader,
   Flex,
   Field,
+  Typography,
 } from '@strapi/design-system';
-import { User } from '@strapi/icons';
+import { User, ArrowLeft } from '@strapi/icons';
 import { useFetchClient } from '@strapi/strapi/admin';
+import HojaDeRutaTable from './HojaDeRutaTable';
+import type { HojaDeRuta, HojaDeRutaResponse } from './types';
 
 const RECORRIDO_LIST_PATH = '/content-manager/collection-types/api::recorrido.recorrido';
 const PAGE_SIZE = 200;
@@ -30,6 +33,8 @@ interface ContentManagerResponse {
   };
 }
 
+type Step = 'select' | 'result';
+
 const sortByIdAgente = (a: Agente, b: Agente): number => {
   const numA = parseInt(a.IdAgente, 10);
   const numB = parseInt(b.IdAgente, 10);
@@ -42,9 +47,13 @@ const AsignarAgenteButton: React.FC = () => {
   const { get } = useFetchClient();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [step, setStep] = useState<Step>('select');
   const [agenteSeleccionado, setAgenteSeleccionado] = useState<string>('');
   const [agentes, setAgentes] = useState<Agente[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingAgentes, setLoadingAgentes] = useState(false);
+  const [loadingHojas, setLoadingHojas] = useState(false);
+  const [hojas, setHojas] = useState<HojaDeRuta[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   if (!location.pathname.startsWith(RECORRIDO_LIST_PATH)) return null;
 
@@ -67,19 +76,125 @@ const AsignarAgenteButton: React.FC = () => {
 
   const handleOpen = async () => {
     setIsOpen(true);
-    setLoading(true);
+    setLoadingAgentes(true);
     try {
       const todos = await fetchAllAgentes();
       setAgentes(todos.sort(sortByIdAgente));
     } finally {
-      setLoading(false);
+      setLoadingAgentes(false);
     }
+  };
+
+  const resetState = () => {
+    setStep('select');
+    setAgenteSeleccionado('');
+    setHojas([]);
+    setError(null);
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    setAgenteSeleccionado('');
+    resetState();
   };
+
+  const handleConfirmar = async () => {
+    if (!agenteSeleccionado) return;
+    setLoadingHojas(true);
+    setError(null);
+    try {
+      const res = await get<HojaDeRutaResponse>(
+        `/api/recorridos/hoja-de-ruta-por-agente/${agenteSeleccionado}`
+      );
+      setHojas(res.data.data ?? []);
+      setStep('result');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message ?? err?.message ?? 'Error al generar la ruta';
+      setError(msg);
+      setStep('result');
+    } finally {
+      setLoadingHojas(false);
+    }
+  };
+
+  const handleVolver = () => {
+    setStep('select');
+    setHojas([]);
+    setError(null);
+  };
+
+  const renderSelectStep = () => (
+    <>
+      <Modal.Body>
+        {loadingAgentes ? (
+          <Flex justifyContent="center" padding={6}>
+            <Loader>Cargando agentes...</Loader>
+          </Flex>
+        ) : (
+          <Field.Root>
+            <Field.Label>Agente</Field.Label>
+            <Combobox
+              placeholder="Buscá por ID o nombre..."
+              value={agenteSeleccionado}
+              onChange={(value: string) => setAgenteSeleccionado(value ?? '')}
+            >
+              {agentes.map((agente) => (
+                <ComboboxOption key={agente.documentId} value={agente.documentId}>
+                  {agente.IdAgente} — {agente.RazonSocial}
+                </ComboboxOption>
+              ))}
+            </Combobox>
+          </Field.Root>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="tertiary" onClick={handleClose}>
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleConfirmar}
+          disabled={!agenteSeleccionado || loadingAgentes || loadingHojas}
+          loading={loadingHojas}
+        >
+          Confirmar
+        </Button>
+      </Modal.Footer>
+    </>
+  );
+
+  const renderResultStep = () => (
+    <>
+      <Modal.Body>
+        {error ? (
+          <Box padding={4}>
+            <Typography textColor="danger600">{error}</Typography>
+          </Box>
+        ) : hojas.length === 0 ? (
+          <Box padding={4}>
+            <Typography textColor="neutral700">
+              El agente no aparece en ningún recorrido.
+            </Typography>
+          </Box>
+        ) : (
+          <Box>
+            <Typography variant="omega" textColor="neutral600">
+              Se encontraron {hojas.length} hoja(s) de ruta para el agente seleccionado.
+            </Typography>
+            <Box paddingTop={4}>
+              {hojas.map((hoja, i) => (
+                <HojaDeRutaTable key={`${hoja.recorridoRaiz.documentId}-${i}`} hoja={hoja} />
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="tertiary" onClick={handleVolver} startIcon={<ArrowLeft />}>
+          Volver
+        </Button>
+        <Button onClick={handleClose}>Cerrar</Button>
+      </Modal.Footer>
+    </>
+  );
 
   return (
     <Box>
@@ -90,38 +205,11 @@ const AsignarAgenteButton: React.FC = () => {
       <Modal.Root open={isOpen} onOpenChange={(open: boolean) => { if (!open) handleClose(); }}>
         <Modal.Content>
           <Modal.Header>
-            <Modal.Title>Asignar Agente al Recorrido</Modal.Title>
+            <Modal.Title>
+              {step === 'select' ? 'Asignar Agente al Recorrido' : 'Hoja de Ruta Generada'}
+            </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            {loading ? (
-              <Flex justifyContent="center" padding={6}>
-                <Loader>Cargando agentes...</Loader>
-              </Flex>
-            ) : (
-              <Field.Root>
-                <Field.Label>Agente</Field.Label>
-                <Combobox
-                  placeholder="Buscá por ID o nombre..."
-                  value={agenteSeleccionado}
-                  onChange={(value: string) => setAgenteSeleccionado(value ?? '')}
-                >
-                  {agentes.map((agente) => (
-                    <ComboboxOption key={agente.documentId} value={agente.documentId}>
-                      {agente.IdAgente} — {agente.RazonSocial}
-                    </ComboboxOption>
-                  ))}
-                </Combobox>
-              </Field.Root>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="tertiary" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button onClick={handleClose} disabled={!agenteSeleccionado || loading}>
-              Confirmar
-            </Button>
-          </Modal.Footer>
+          {step === 'select' ? renderSelectStep() : renderResultStep()}
         </Modal.Content>
       </Modal.Root>
     </Box>
