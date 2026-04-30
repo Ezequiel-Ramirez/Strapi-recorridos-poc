@@ -9,5 +9,14 @@ export default {
         policies: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/recorridos/hoja-de-ruta-por-agentes',
+      handler: 'recorrido.hojaDeRutaPorAgentes',
+      config: {
+        auth: false,
+        policies: [],
+      },
+    },
   ],
 };

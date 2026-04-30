@@ -29,6 +29,7 @@ export interface ParadaExpandida {
   detalle: DetalleParada;
   nivel: number;
   esDestinoBuscado: boolean;
+  agentesDestino?: AgenteDetalle[];
 }
 
 export interface HojaDeRuta {
@@ -40,4 +41,9 @@ export interface HojaDeRuta {
 
 export interface HojaDeRutaResponse {
   data: HojaDeRuta[];
+}
+
+export interface MultiAgenteResponse {
+  data: HojaDeRuta[];
+  agentesNoEncontrados: string[];
 }

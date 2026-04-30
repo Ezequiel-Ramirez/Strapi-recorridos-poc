@@ -4,17 +4,19 @@ import {
   Button,
   Box,
   Modal,
-  Combobox,
-  ComboboxOption,
+  MultiSelect,
+  MultiSelectOption,
+  Accordion,
   Loader,
   Flex,
   Field,
   Typography,
+  Badge,
 } from '@strapi/design-system';
 import { User, ArrowLeft } from '@strapi/icons';
 import { useFetchClient } from '@strapi/strapi/admin';
 import HojaDeRutaTable from './HojaDeRutaTable';
-import type { HojaDeRuta, HojaDeRutaResponse } from './types';
+import type { HojaDeRuta, MultiAgenteResponse } from './types';
 
 const RECORRIDO_LIST_PATH = '/content-manager/collection-types/api::recorrido.recorrido';
 const PAGE_SIZE = 200;
@@ -44,15 +46,18 @@ const sortByIdAgente = (a: Agente, b: Agente): number => {
 
 const AsignarAgenteButton: React.FC = () => {
   const location = useLocation();
-  const { get } = useFetchClient();
+  const { get, post } = useFetchClient();
 
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<Step>('select');
-  const [agenteSeleccionado, setAgenteSeleccionado] = useState<string>('');
+  const [agentesSeleccionados, setAgentesSeleccionados] = useState<string[]>([]);
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [loadingAgentes, setLoadingAgentes] = useState(false);
   const [loadingHojas, setLoadingHojas] = useState(false);
-  const [hojas, setHojas] = useState<HojaDeRuta[]>([]);
+  const [resultado, setResultado] = useState<{
+    hojas: HojaDeRuta[];
+    agentesNoEncontrados: string[];
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   if (!location.pathname.startsWith(RECORRIDO_LIST_PATH)) return null;
@@ -87,8 +92,8 @@ const AsignarAgenteButton: React.FC = () => {
 
   const resetState = () => {
     setStep('select');
-    setAgenteSeleccionado('');
-    setHojas([]);
+    setAgentesSeleccionados([]);
+    setResultado(null);
     setError(null);
   };
 
@@ -98,17 +103,25 @@ const AsignarAgenteButton: React.FC = () => {
   };
 
   const handleConfirmar = async () => {
-    if (!agenteSeleccionado) return;
+    if (agentesSeleccionados.length === 0) return;
     setLoadingHojas(true);
     setError(null);
     try {
-      const res = await get<HojaDeRutaResponse>(
-        `/api/recorridos/hoja-de-ruta-por-agente/${agenteSeleccionado}`
+      const res = await post<{ data: MultiAgenteResponse }>(
+        '/api/recorridos/hoja-de-ruta-por-agentes',
+        { agentes: agentesSeleccionados },
       );
-      setHojas(res.data.data ?? []);
+      // Strapi wrap: res.data.data === MultiAgenteResponse
+      setResultado({
+        hojas: res.data.data.data ?? [],
+        agentesNoEncontrados: res.data.data.agentesNoEncontrados ?? [],
+      });
       setStep('result');
     } catch (err: any) {
-      const msg = err?.response?.data?.error?.message ?? err?.message ?? 'Error al generar la ruta';
+      const msg =
+        err?.response?.data?.error?.message ??
+        err?.message ??
+        'Error al generar las hojas de ruta';
       setError(msg);
       setStep('result');
     } finally {
@@ -118,7 +131,7 @@ const AsignarAgenteButton: React.FC = () => {
 
   const handleVolver = () => {
     setStep('select');
-    setHojas([]);
+    setResultado(null);
     setError(null);
   };
 
@@ -131,18 +144,19 @@ const AsignarAgenteButton: React.FC = () => {
           </Flex>
         ) : (
           <Field.Root>
-            <Field.Label>Agente</Field.Label>
-            <Combobox
-              placeholder="Buscá por ID o nombre..."
-              value={agenteSeleccionado}
-              onChange={(value: string) => setAgenteSeleccionado(value ?? '')}
+            <Field.Label>Agentes</Field.Label>
+            <MultiSelect
+              placeholder="Seleccioná uno o más agentes..."
+              value={agentesSeleccionados}
+              onChange={(values: string[]) => setAgentesSeleccionados(values ?? [])}
+              withTags
             >
               {agentes.map((agente) => (
-                <ComboboxOption key={agente.documentId} value={agente.documentId}>
+                <MultiSelectOption key={agente.documentId} value={agente.documentId}>
                   {agente.IdAgente} — {agente.RazonSocial}
-                </ComboboxOption>
+                </MultiSelectOption>
               ))}
-            </Combobox>
+            </MultiSelect>
           </Field.Root>
         )}
       </Modal.Body>
@@ -152,10 +166,10 @@ const AsignarAgenteButton: React.FC = () => {
         </Button>
         <Button
           onClick={handleConfirmar}
-          disabled={!agenteSeleccionado || loadingAgentes || loadingHojas}
+          disabled={agentesSeleccionados.length === 0 || loadingAgentes || loadingHojas}
           loading={loadingHojas}
         >
-          Confirmar
+          Generar hojas de ruta
         </Button>
       </Modal.Footer>
     </>
@@ -168,22 +182,58 @@ const AsignarAgenteButton: React.FC = () => {
           <Box padding={4}>
             <Typography textColor="danger600">{error}</Typography>
           </Box>
-        ) : hojas.length === 0 ? (
+        ) : resultado === null ? (
           <Box padding={4}>
-            <Typography textColor="neutral700">
-              El agente no aparece en ningún recorrido.
-            </Typography>
+            <Typography textColor="neutral700">Sin resultados.</Typography>
           </Box>
         ) : (
           <Box>
-            <Typography variant="omega" textColor="neutral600">
-              Se encontraron {hojas.length} hoja(s) de ruta para el agente seleccionado.
-            </Typography>
-            <Box paddingTop={4}>
-              {hojas.map((hoja, i) => (
-                <HojaDeRutaTable key={`${hoja.recorridoRaiz.documentId}-${i}`} hoja={hoja} />
-              ))}
-            </Box>
+            {resultado.agentesNoEncontrados.length > 0 && (
+              <Box background="warning100" padding={3} hasRadius paddingBottom={4}>
+                <Typography variant="omega" textColor="warning700" fontWeight="bold">
+                  Agentes no encontrados ({resultado.agentesNoEncontrados.length}):
+                </Typography>
+                <Box paddingTop={2}>
+                  <Flex gap={2} wrap="wrap">
+                    {resultado.agentesNoEncontrados.map((id) => {
+                      const agente = agentes.find((a) => a.documentId === id);
+                      return (
+                        <Badge key={id} backgroundColor="warning200" textColor="warning700">
+                          {agente ? agente.IdAgente : id}
+                        </Badge>
+                      );
+                    })}
+                  </Flex>
+                </Box>
+              </Box>
+            )}
+            {resultado.hojas.length === 0 ? (
+              <Box padding={4}>
+                <Typography textColor="neutral700">
+                  Ninguno de los agentes seleccionados aparece en un recorrido.
+                </Typography>
+              </Box>
+            ) : (
+              <Accordion.Root size="M" type="multiple">
+                {resultado.hojas.map((hoja) => (
+                  <Accordion.Item
+                    key={hoja.recorridoRaiz.documentId}
+                    value={hoja.recorridoRaiz.documentId}
+                  >
+                    <Accordion.Header>
+                      <Accordion.Trigger>
+                        {hoja.recorridoRaiz.codigo} — {hoja.recorridoRaiz.descripcion}
+                      </Accordion.Trigger>
+                    </Accordion.Header>
+                    <Accordion.Content>
+                      <Box padding={4}>
+                        <HojaDeRutaTable hoja={hoja} />
+                      </Box>
+                    </Accordion.Content>
+                  </Accordion.Item>
+                ))}
+              </Accordion.Root>
+            )}
           </Box>
         )}
       </Modal.Body>
@@ -206,7 +256,7 @@ const AsignarAgenteButton: React.FC = () => {
         <Modal.Content>
           <Modal.Header>
             <Modal.Title>
-              {step === 'select' ? 'Asignar Agente al Recorrido' : 'Hoja de Ruta Generada'}
+              {step === 'select' ? 'Asignar Agente al Recorrido' : 'Hojas de Ruta Generadas'}
             </Modal.Title>
           </Modal.Header>
           {step === 'select' ? renderSelectStep() : renderResultStep()}

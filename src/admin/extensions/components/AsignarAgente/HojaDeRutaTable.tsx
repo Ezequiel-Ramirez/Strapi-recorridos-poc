@@ -9,6 +9,7 @@ import {
   Th,
   Td,
   Badge,
+  Flex,
 } from '@strapi/design-system';
 import type { HojaDeRuta, ParadaExpandida, AgenteDetalle, RecorridoRef } from './types';
 
@@ -55,7 +56,7 @@ const HojaDeRutaTable: React.FC<Props> = ({ hoja }) => {
         </Box>
       )}
 
-      <Table colCount={6} rowCount={paradasExpandidas.length}>
+      <Table colCount={5} rowCount={paradasExpandidas.length}>
         <Thead>
           <Tr>
             <Th>
@@ -106,6 +107,17 @@ const HojaDeRutaTable: React.FC<Props> = ({ hoja }) => {
                 >
                   {formatDetalle(parada)}
                 </Typography>
+                {parada.agentesDestino && parada.agentesDestino.length > 0 && (
+                  <Box paddingTop={1}>
+                    <Flex gap={1} wrap="wrap">
+                      {parada.agentesDestino.map((a) => (
+                        <Badge key={a.documentId} backgroundColor="primary100" textColor="primary700">
+                          {a.IdAgente}
+                        </Badge>
+                      ))}
+                    </Flex>
+                  </Box>
+                )}
               </Td>
             </Tr>
           ))}
